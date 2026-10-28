@@ -29,4 +29,10 @@ func Register(u *model.User) error {
 	return result.Error
 }
 
+func FindUserByusername(username string) (model.User,error){
+	var user model.User
+	err := DB.Where("username = ?",username).First(&user).Error
+	return user,err
+}
+
 

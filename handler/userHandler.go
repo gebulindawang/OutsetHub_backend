@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/dao"
 	"backend/model"
+	"backend/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,30 @@ func Register(c *gin.Context){
 	c.JSON(http.StatusOK,gin.H{"msg":"注册成功"})
 }
 
+func Login(c *gin.Context){
+	var user model.User
+	if err := c.ShouldBindJSON(&user); err != nil{
+		c.JSON(http.StatusBadRequest,gin.H{"err":"数据解析失败"})
+	}
+	u,err := dao.FindUserByusername(user.Username)
+	if err != nil{
+		c.JSON(http.StatusBadRequest,gin.H{"err":err.Error()})
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password),[]byte(user.Password));err != nil{
+		c.JSON(http.StatusBadRequest,gin.H{"err":err.Error()})
+		return
+	}
+	token ,err:= utils.GenToken(u.ID,u.Username,u.Role)
+	if err != nil{
+		panic(err)	
+	}
+
+	c.JSON(http.StatusOK,gin.H{"msg":"登录成功","token":token})
+	
+}
+
 func RegisterUserRoutes(rg *gin.RouterGroup){
 	rg.POST("/register",Register)
+	rg.POST("login",Login)
 }
