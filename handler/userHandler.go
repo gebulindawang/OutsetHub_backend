@@ -49,10 +49,18 @@ func Login(c *gin.Context){
 	}
 
 	c.JSON(http.StatusOK,gin.H{"msg":"登录成功","token":token})
-	
+}
+
+func UserInfo(c *gin.Context){
+	c.JSON(200,gin.H{"msg":"获取成功"})
 }
 
 func RegisterUserRoutes(rg *gin.RouterGroup){
 	rg.POST("/register",Register)
 	rg.POST("login",Login)
+	
+}
+
+func RegisterAuthRoutes(rg *gin.RouterGroup){
+	rg.GET("/me",UserInfo)
 }
