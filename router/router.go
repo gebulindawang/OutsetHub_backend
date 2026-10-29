@@ -9,14 +9,17 @@ import (
 
 func SetupRouter() *gin.Engine{
 	r := gin.Default()
-	api := r.Group("/user")
-	handler.RegisterUserRoutes(api)
+	api := r.Group("/api")
 
-	auth := r.Group("/user")
+
+	pub := api.Group("/user")
+	handler.RegisterUserRoutes(pub)
+
+	auth := api.Group("/user")
 	auth.Use(middleware.JWTAuth())
 	handler.RegisterAuthRoutes(auth)
 
-	article := r.Group("/article")
+	article := api.Group("/article")
 	article.Use(middleware.JWTAuth())
 	handler.RegisterArticleRoutes(article)
 	return  r
