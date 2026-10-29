@@ -2,6 +2,7 @@ package handler
 
 import (
 	"backend/dao"
+	"backend/middleware"
 	"backend/model"
 	"backend/utils"
 	"net/http"
@@ -33,6 +34,7 @@ func Login(c *gin.Context){
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil{
 		c.JSON(http.StatusBadRequest,gin.H{"err":"数据解析失败"})
+		return
 	}
 	u,err := dao.FindUserByusername(user.Username)
 	if err != nil{
@@ -52,13 +54,20 @@ func Login(c *gin.Context){
 }
 
 func UserInfo(c *gin.Context){
+	username := c.GetString(middleware.CtxUsername)
+	u,err := dao.FindUserByusername(username)
+	if err != nil {
+		panic(err)
+	}
+	c.JSON(http.StatusOK,gin.H{"data":u})
+
 	c.JSON(200,gin.H{"msg":"获取成功"})
 }
 
+
 func RegisterUserRoutes(rg *gin.RouterGroup){
 	rg.POST("/register",Register)
-	rg.POST("login",Login)
-	
+	rg.POST("/login",Login)
 }
 
 func RegisterAuthRoutes(rg *gin.RouterGroup){
