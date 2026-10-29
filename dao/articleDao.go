@@ -21,6 +21,6 @@ func DeleteArticle(article model.Article) error{
 }
 
 func UpdateArticle(article model.Article)error{
-	res := DB.Model(&article).Where("id = ?",article.ID).Updates(&article)
+	res := DB.Model(&article).Updates(&article)
 	return  res.Error
 }
