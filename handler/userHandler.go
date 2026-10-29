@@ -59,9 +59,7 @@ func UserInfo(c *gin.Context){
 	if err != nil {
 		panic(err)
 	}
-	c.JSON(http.StatusOK,gin.H{"data":u})
-
-	c.JSON(200,gin.H{"msg":"获取成功"})
+	c.JSON(http.StatusOK,gin.H{"msg":"获取成功","data":u})
 }
 
 
