@@ -22,5 +22,9 @@ func SetupRouter() *gin.Engine{
 	article := api.Group("/article")
 	article.Use(middleware.JWTAuth())
 	handler.RegisterArticleRoutes(article)
+
+	category := api.Group("/category")
+	category.Use(middleware.JWTAuth())
+	handler.RegisterCategoryRoutes(category)
 	return  r
 }
