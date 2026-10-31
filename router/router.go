@@ -7,10 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter() *gin.Engine{
+func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	api := r.Group("/api")
-
 
 	pub := api.Group("/user")
 	handler.RegisterUserRoutes(pub)
@@ -26,5 +25,10 @@ func SetupRouter() *gin.Engine{
 	category := api.Group("/category")
 	category.Use(middleware.JWTAuth())
 	handler.RegisterCategoryRoutes(category)
-	return  r
+
+	categoryAdmin := api.Group("/category")
+	categoryAdmin.Use(middleware.JWTAuth(), middleware.AdminRequired())
+	handler.RegisterCategoryAdminRoutes(categoryAdmin)
+
+	return r
 }
