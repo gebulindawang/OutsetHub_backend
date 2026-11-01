@@ -8,7 +8,7 @@ import (
 )
 
 
-
+ 
 func InitDB() error {
 	if err := godotenv.Load(); err != nil {
 		return err
@@ -21,3 +21,4 @@ func InitDB() error {
 	DB = db
 	return nil
 }
+
