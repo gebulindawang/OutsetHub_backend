@@ -12,45 +12,76 @@ import (
 	"gorm.io/gorm"
 )
 
+// GetArticles 文章列表
+//
+//	@Summary		文章列表
+//	@Description	只返回 status=1 的已发布文章,按创建时间倒序,当前固定 10 条,暂不支持分页与按板块筛选。
+//	@Tags			article
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	model.ArticleListResp
+//	@Failure		401	{object}	model.CodeMsgResp	"未登录或 token 失效"
+//	@Failure		500	{object}	model.ErrResp
+//	@Router			/article/ [get]
 func GetArticles(c *gin.Context) {
 	articles, err := dao.GetArticles()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "查询失败", "err": err.Error()})
+		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "查询失败", Err: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"msg": "查询成功", "data": articles})
+	c.JSON(http.StatusOK, model.ArticleListResp{Msg: "查询成功", Data: articles})
 }
 
+// GetArticleByID 文章详情
+//
+//	@Summary		文章详情
+//	@Description	按 ID 查询单篇文章。注意:本接口不校验 status,草稿和已删除的文章也能取到,由调用方自行判断。
+//	@Tags			article
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"文章 ID"
+//	@Success		200	{object}	model.ArticleResp
+//	@Failure		400	{object}	model.ErrResp		"无效的文章 ID"
+//	@Failure		401	{object}	model.CodeMsgResp	"未登录或 token 失效"
+//	@Failure		404	{object}	model.ErrResp		"文章不存在"
+//	@Failure		500	{object}	model.ErrResp
+//	@Router			/article/{id} [get]
 func GetArticleByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的文章 ID"})
+		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "无效的文章 ID"})
 		return
 	}
 	article, err := dao.GetArticleByID(id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, gin.H{"msg": "文章不存在"})
+		c.JSON(http.StatusNotFound, model.ErrResp{Msg: "文章不存在"})
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "查询失败", "err": err.Error()})
+		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "查询失败", Err: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"msg": "查询成功", "data": article})
+	c.JSON(http.StatusOK, model.ArticleResp{Msg: "查询成功", Data: article})
 }
 
-type createArticleReq struct {
-	Title      string `json:"title" binding:"required"`
-	Summary    string `json:"summary"`
-	Content    string `json:"content" binding:"required"`
-	CategoryID int    `json:"category_id" binding:"required"`
-	Status     *int   `json:"status"`
-}
-
+// CreateArticle 发布文章
+//
+//	@Summary		发布文章
+//	@Description	作者取自 JWT,不信任请求体里的 user_id。status 不传默认 1 已发布,传 0 表示存草稿。
+//	@Tags			article
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		model.CreateArticleReq	true	"文章内容"
+//	@Success		200		{object}	model.MsgResp
+//	@Failure		400		{object}	model.ErrResp		"缺少 title/content/category_id"
+//	@Failure		401		{object}	model.CodeMsgResp	"未登录或 token 失效"
+//	@Failure		500		{object}	model.ErrResp
+//	@Router			/article/ [post]
 func CreateArticle(c *gin.Context) {
-	var req createArticleReq
+	var req model.CreateArticleReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数错误,需要 title/content/category_id", "err": err.Error()})
+		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "参数错误,需要 title/content/category_id", Err: err.Error()})
 		return
 	}
 
@@ -66,43 +97,52 @@ func CreateArticle(c *gin.Context) {
 		article.Status = *req.Status
 	}
 	if err := dao.CreateArticle(article); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "创建失败", "err": err.Error()})
+		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "创建失败", Err: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"msg": "发布成功"})
+	c.JSON(http.StatusOK, model.MsgResp{Msg: "发布成功"})
 }
 
-type updateArticleReq struct {
-	Title      string `json:"title"`
-	Summary    string `json:"summary"`
-	Content    string `json:"content"`
-	CategoryID *int   `json:"category_id"`
-	Status     *int   `json:"status"`
-}
-
+// UpdateArticle 编辑文章
+//
+//	@Summary		编辑文章
+//	@Description	仅作者本人可操作。部分更新:只提交需要修改的字段,空字符串视为不修改。
+//	@Tags			article
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"文章 ID"
+//	@Param			body	body		model.UpdateArticleReq	true	"待更新字段"
+//	@Success		200		{object}	model.MsgResp
+//	@Failure		400		{object}	model.ErrResp		"参数错误或没有可更新的字段"
+//	@Failure		401		{object}	model.CodeMsgResp	"未登录或 token 失效"
+//	@Failure		403		{object}	model.ErrResp		"只能编辑自己的文章"
+//	@Failure		404		{object}	model.ErrResp		"文章不存在"
+//	@Failure		500		{object}	model.ErrResp
+//	@Router			/article/{id} [put]
 func UpdateArticle(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的文章 ID"})
+		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "无效的文章 ID"})
 		return
 	}
 	article, err := dao.GetArticleByID(id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, gin.H{"msg": "文章不存在"})
+		c.JSON(http.StatusNotFound, model.ErrResp{Msg: "文章不存在"})
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "查询失败", "err": err.Error()})
+		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "查询失败", Err: err.Error()})
 		return
 	}
 	if article.UserID != c.GetInt(middleware.CtxUserID) {
-		c.JSON(http.StatusForbidden, gin.H{"msg": "只能编辑自己的文章"})
+		c.JSON(http.StatusForbidden, model.ErrResp{Msg: "只能编辑自己的文章"})
 		return
 	}
 
-	var req updateArticleReq
+	var req model.UpdateArticleReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "参数错误", "err": err.Error()})
+		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "参数错误", Err: err.Error()})
 		return
 	}
 	updates := map[string]any{}
@@ -122,40 +162,55 @@ func UpdateArticle(c *gin.Context) {
 		updates["status"] = *req.Status
 	}
 	if len(updates) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "没有需要更新的字段"})
+		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "没有需要更新的字段"})
 		return
 	}
 	if err := dao.UpdateArticle(id, updates); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "更新失败", "err": err.Error()})
+		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "更新失败", Err: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"msg": "修改成功"})
+	c.JSON(http.StatusOK, model.MsgResp{Msg: "修改成功"})
 }
 
+// DeleteArticle 删除文章
+//
+//	@Summary		删除文章
+//	@Description	软删除,把 status 置为 2,记录仍留在库中。仅作者本人可操作。
+//	@Tags			article
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"文章 ID"
+//	@Success		200	{object}	model.MsgResp
+//	@Failure		400	{object}	model.ErrResp		"无效的文章 ID"
+//	@Failure		401	{object}	model.CodeMsgResp	"未登录或 token 失效"
+//	@Failure		403	{object}	model.ErrResp		"只能删除自己的文章"
+//	@Failure		404	{object}	model.ErrResp		"文章不存在"
+//	@Failure		500	{object}	model.ErrResp
+//	@Router			/article/{id} [delete]
 func DeleteArticle(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "无效的文章 ID"})
+		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "无效的文章 ID"})
 		return
 	}
 	article, err := dao.GetArticleByID(id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, gin.H{"msg": "文章不存在"})
+		c.JSON(http.StatusNotFound, model.ErrResp{Msg: "文章不存在"})
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "查询失败", "err": err.Error()})
+		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "查询失败", Err: err.Error()})
 		return
 	}
 	if article.UserID != c.GetInt(middleware.CtxUserID) {
-		c.JSON(http.StatusForbidden, gin.H{"msg": "只能删除自己的文章"})
+		c.JSON(http.StatusForbidden, model.ErrResp{Msg: "只能删除自己的文章"})
 		return
 	}
 	if err := dao.DeleteArticle(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "删除失败", "err": err.Error()})
+		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "删除失败", Err: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"msg": "删除成功"})
+	c.JSON(http.StatusOK, model.MsgResp{Msg: "删除成功"})
 }
 
 func RegisterArticleRoutes(rg *gin.RouterGroup) {

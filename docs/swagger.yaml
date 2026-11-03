@@ -1,0 +1,887 @@
+basePath: /api
+definitions:
+  model.Article:
+    properties:
+      category_id:
+        type: integer
+      comment_count:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      like_count:
+        type: integer
+      status:
+        type: integer
+      summary:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+      view_count:
+        type: integer
+    type: object
+  model.ArticleListResp:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Article'
+        type: array
+      msg:
+        example: 查询成功
+        type: string
+    type: object
+  model.ArticleResp:
+    properties:
+      data:
+        $ref: '#/definitions/model.Article'
+      msg:
+        example: 查询成功
+        type: string
+    type: object
+  model.Category:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        description: 分类名,全局唯一
+        type: string
+      sort:
+        description: 排序权重,越小越靠前
+        type: integer
+    type: object
+  model.CategoryListResp:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Category'
+        type: array
+      msg:
+        example: 查询成功
+        type: string
+    type: object
+  model.CodeMsgResp:
+    properties:
+      code:
+        example: 401
+        type: integer
+      msg:
+        example: 请先登录
+        type: string
+    type: object
+  model.Comment:
+    properties:
+      article_id:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      like_count:
+        type: integer
+      parent_id:
+        type: integer
+      reply_to_user_id:
+        type: integer
+      status:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  model.CommentListResp:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Comment'
+        type: array
+      msg:
+        example: 查询成功
+        type: string
+    type: object
+  model.CommentResp:
+    properties:
+      data:
+        $ref: '#/definitions/model.Comment'
+      msg:
+        example: 查询成功
+        type: string
+    type: object
+  model.CreateArticleReq:
+    properties:
+      category_id:
+        example: 1
+        type: integer
+      content:
+        example: |-
+          ## 正文
+
+          支持 Markdown
+        type: string
+      status:
+        description: 不传默认 1 已发布,0 为草稿
+        example: 1
+        type: integer
+      summary:
+        example: 一句话摘要,列表页展示
+        type: string
+      title:
+        example: Vue3 的 ref 和 reactive 该怎么选
+        type: string
+    required:
+    - category_id
+    - content
+    - title
+    type: object
+  model.CreateCategoryReq:
+    properties:
+      name:
+        example: 前端
+        type: string
+      sort:
+        example: 10
+        type: integer
+    required:
+    - name
+    type: object
+  model.CreateCommentReq:
+    properties:
+      article_id:
+        example: 1
+        type: integer
+      content:
+        example: 这段代码在 Safari 下会报错
+        type: string
+      parent_id:
+        description: 0 表示一级评论
+        example: 0
+        type: integer
+      reply_to_user_id:
+        example: 0
+        type: integer
+    required:
+    - article_id
+    - content
+    type: object
+  model.ErrResp:
+    properties:
+      err:
+        example: 'Key: ''Title'' Error:Field validation for ''Title'' failed on the
+          ''required'' tag'
+        type: string
+      msg:
+        example: 参数错误
+        type: string
+    type: object
+  model.LoginReq:
+    properties:
+      password:
+        example: "123456"
+        type: string
+      username:
+        example: lisi
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  model.LoginResp:
+    properties:
+      msg:
+        example: 登录成功
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxx
+        type: string
+    type: object
+  model.MsgResp:
+    properties:
+      msg:
+        example: 操作成功
+        type: string
+    type: object
+  model.RegisterReq:
+    properties:
+      nickname:
+        example: 李四
+        type: string
+      password:
+        example: "123456"
+        type: string
+      username:
+        example: lisi
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  model.UpdateArticleReq:
+    properties:
+      category_id:
+        example: 2
+        type: integer
+      content:
+        example: 新正文
+        type: string
+      status:
+        example: 1
+        type: integer
+      summary:
+        example: 新摘要
+        type: string
+      title:
+        example: 新标题
+        type: string
+    type: object
+  model.UpdateCategoryReq:
+    properties:
+      name:
+        example: 前端开发
+        type: string
+      sort:
+        example: 20
+        type: integer
+    type: object
+  model.UpdateCommentReq:
+    properties:
+      content:
+        example: 修改后的内容
+        type: string
+    type: object
+  model.User:
+    properties:
+      id:
+        type: integer
+      nickname:
+        type: string
+      role:
+        type: integer
+      username:
+        type: string
+    type: object
+  model.UserResp:
+    properties:
+      data:
+        $ref: '#/definitions/model.User'
+      msg:
+        example: 获取成功
+        type: string
+    type: object
+host: 127.0.0.1:8080
+info:
+  contact: {}
+  description: |-
+    起点社区后端接口文档。除注册、登录外,所有接口都需要在请求头携带 Bearer token。
+    使用方式:先调用 POST /api/user/login 拿到 token,再点击右上角 Authorize 填入 token 原文(不需要自己加 Bearer 前缀)。
+    统一响应约定:成功为 {msg, data} 或 {msg};业务错误为 {msg, err};中间件错误为 {code, msg}。
+  title: 起点社区 OutsetHub API
+  version: "1.0"
+paths:
+  /article/:
+    get:
+      description: 只返回 status=1 的已发布文章,按创建时间倒序,当前固定 10 条,暂不支持分页与按板块筛选。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ArticleListResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 文章列表
+      tags:
+      - article
+    post:
+      consumes:
+      - application/json
+      description: 作者取自 JWT,不信任请求体里的 user_id。status 不传默认 1 已发布,传 0 表示存草稿。
+      parameters:
+      - description: 文章内容
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateArticleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 缺少 title/content/category_id
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 发布文章
+      tags:
+      - article
+  /article/{id}:
+    delete:
+      description: 软删除,把 status 置为 2,记录仍留在库中。仅作者本人可操作。
+      parameters:
+      - description: 文章 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 无效的文章 ID
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "403":
+          description: 只能删除自己的文章
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "404":
+          description: 文章不存在
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 删除文章
+      tags:
+      - article
+    get:
+      description: 按 ID 查询单篇文章。注意:本接口不校验 status,草稿和已删除的文章也能取到,由调用方自行判断。
+      parameters:
+      - description: 文章 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ArticleResp'
+        "400":
+          description: 无效的文章 ID
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "404":
+          description: 文章不存在
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 文章详情
+      tags:
+      - article
+    put:
+      consumes:
+      - application/json
+      description: 仅作者本人可操作。部分更新:只提交需要修改的字段,空字符串视为不修改。
+      parameters:
+      - description: 文章 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 待更新字段
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateArticleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 参数错误或没有可更新的字段
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "403":
+          description: 只能编辑自己的文章
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "404":
+          description: 文章不存在
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 编辑文章
+      tags:
+      - article
+  /category/:
+    get:
+      description: 按 sort 升序返回全部板块,登录用户即可读取
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CategoryListResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 板块列表
+      tags:
+      - category
+    post:
+      consumes:
+      - application/json
+      description: 仅管理员(role=1)可调用。板块名全局唯一,最长 50 个字符。
+      parameters:
+      - description: 板块信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateCategoryReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 参数错误或板块名已存在
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "403":
+          description: 需要管理员权限
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+      security:
+      - BearerAuth: []
+      summary: 新建板块
+      tags:
+      - category
+  /category/{id}:
+    delete:
+      description: 仅管理员可调用。物理删除,不校验是否仍有文章引用该板块。
+      parameters:
+      - description: 板块 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 无效的分类 ID
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "403":
+          description: 需要管理员权限
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 删除板块
+      tags:
+      - category
+    put:
+      consumes:
+      - application/json
+      description: 仅管理员可调用,部分更新:只传需要修改的字段
+      parameters:
+      - description: 板块 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 待更新字段
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateCategoryReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 无效的 ID 或没有可更新的字段
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "403":
+          description: 需要管理员权限
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 修改板块
+      tags:
+      - category
+  /comment/:
+    get:
+      description: 按 article_id 查询,只返回 status=1 的评论,按创建时间升序
+      parameters:
+      - description: 文章 ID
+        in: query
+        name: article_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CommentListResp'
+        "400":
+          description: 缺少 article_id
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 某篇文章的评论列表
+      tags:
+      - comment
+    post:
+      consumes:
+      - application/json
+      description: 评论人取自 JWT。parent_id 为 0 表示一级评论,非 0 表示回复某条评论。正文最长 500 字。
+      parameters:
+      - description: 评论内容
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateCommentReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 缺少 article_id/content 或超出长度
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 发表评论
+      tags:
+      - comment
+  /comment/{id}:
+    delete:
+      description: 软删除,status 置为 2。仅评论作者本人可操作。
+      parameters:
+      - description: 评论 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 无效的评论 ID
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "403":
+          description: 只能删除自己的评论
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "404":
+          description: 评论不存在
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 删除评论
+      tags:
+      - comment
+    get:
+      description: 按 ID 查询单条评论
+      parameters:
+      - description: 评论 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CommentResp'
+        "400":
+          description: 无效的评论 ID
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "404":
+          description: 评论不存在
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 评论详情
+      tags:
+      - comment
+    put:
+      consumes:
+      - application/json
+      description: 仅评论作者本人可操作,正文不能为空且最长 500 字
+      parameters:
+      - description: 评论 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 新内容
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateCommentReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 内容为空或超出长度
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "403":
+          description: 只能编辑自己的评论
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "404":
+          description: 评论不存在
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 修改评论
+      tags:
+      - comment
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: '校验用户名密码,返回有效期 2 小时的 JWT。后续请求放在 Authorization: Bearer <token>'
+      parameters:
+      - description: 登录参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.LoginResp'
+        "400":
+          description: 用户名或密码错误
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      summary: 用户登录
+      tags:
+      - user
+  /user/me:
+    get:
+      description: 从 JWT 中取用户名再查库,Password 字段不会返回
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.UserResp'
+        "401":
+          description: 未登录或 token 失效
+          schema:
+            $ref: '#/definitions/model.CodeMsgResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      security:
+      - BearerAuth: []
+      summary: 当前登录用户信息
+      tags:
+      - user
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: 用户名全局唯一,密码经 bcrypt 哈希后入库。成功仅返回提示信息,不返回 token。
+      parameters:
+      - description: 注册参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.RegisterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MsgResp'
+        "400":
+          description: 参数错误或用户名已存在
+          schema:
+            $ref: '#/definitions/model.ErrResp'
+      summary: 用户注册
+      tags:
+      - user
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    description: 格式:Bearer <token>
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

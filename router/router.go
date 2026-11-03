@@ -4,11 +4,19 @@ import (
 	"backend/handler"
 	"backend/middleware"
 
+	_ "backend/docs" // 注册 swag 生成的文档,勿删
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
+
+	// Swagger UI:http://127.0.0.1:8080/swagger/index.html
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	api := r.Group("/api")
 
 	pub := api.Group("/user")
