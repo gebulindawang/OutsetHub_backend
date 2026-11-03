@@ -18,7 +18,6 @@ CREATE TABLE `category` (
   KEY `idx_sort` (`sort`)
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
--- 初始板块
 INSERT INTO `category` (`name`, `sort`) VALUES
   ('前端',   10),
   ('后端',   20),

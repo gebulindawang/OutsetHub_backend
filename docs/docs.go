@@ -40,7 +40,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "500": {
@@ -95,7 +95,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "500": {
@@ -147,7 +147,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "404": {
@@ -215,7 +215,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "403": {
@@ -277,7 +277,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "403": {
@@ -326,7 +326,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "500": {
@@ -381,13 +381,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "403": {
                         "description": "需要管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     }
                 }
@@ -445,13 +445,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "403": {
                         "description": "需要管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "500": {
@@ -501,13 +501,13 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "403": {
                         "description": "需要管理员权限",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "500": {
@@ -559,7 +559,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "500": {
@@ -614,7 +614,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "500": {
@@ -666,7 +666,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "404": {
@@ -734,7 +734,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "403": {
@@ -796,7 +796,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "403": {
@@ -822,7 +822,7 @@ const docTemplate = `{
         },
         "/user/login": {
             "post": {
-                "description": "校验用户名密码,返回有效期 2 小时的 JWT。后续请求放在 Authorization: Bearer \u003ctoken\u003e",
+                "description": "校验用户名密码,返回有效期 2 小时的 JWT。token 位于 data.token,后续请求放在 Authorization: Bearer \u003ctoken\u003e",
                 "consumes": [
                     "application/json"
                 ],
@@ -885,7 +885,7 @@ const docTemplate = `{
                     "401": {
                         "description": "未登录或 token 失效",
                         "schema": {
-                            "$ref": "#/definitions/model.CodeMsgResp"
+                            "$ref": "#/definitions/model.ErrResp"
                         }
                     },
                     "500": {
@@ -983,6 +983,10 @@ const docTemplate = `{
         "model.ArticleListResp": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 0
+                },
                 "data": {
                     "type": "array",
                     "items": {
@@ -991,19 +995,23 @@ const docTemplate = `{
                 },
                 "msg": {
                     "type": "string",
-                    "example": "查询成功"
+                    "example": "ok"
                 }
             }
         },
         "model.ArticleResp": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 0
+                },
                 "data": {
                     "$ref": "#/definitions/model.Article"
                 },
                 "msg": {
                     "type": "string",
-                    "example": "查询成功"
+                    "example": "ok"
                 }
             }
         },
@@ -1029,6 +1037,10 @@ const docTemplate = `{
         "model.CategoryListResp": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 0
+                },
                 "data": {
                     "type": "array",
                     "items": {
@@ -1037,20 +1049,7 @@ const docTemplate = `{
                 },
                 "msg": {
                     "type": "string",
-                    "example": "查询成功"
-                }
-            }
-        },
-        "model.CodeMsgResp": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 401
-                },
-                "msg": {
-                    "type": "string",
-                    "example": "请先登录"
+                    "example": "ok"
                 }
             }
         },
@@ -1089,6 +1088,10 @@ const docTemplate = `{
         "model.CommentListResp": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 0
+                },
                 "data": {
                     "type": "array",
                     "items": {
@@ -1097,19 +1100,23 @@ const docTemplate = `{
                 },
                 "msg": {
                     "type": "string",
-                    "example": "查询成功"
+                    "example": "ok"
                 }
             }
         },
         "model.CommentResp": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 0
+                },
                 "data": {
                     "$ref": "#/definitions/model.Comment"
                 },
                 "msg": {
                     "type": "string",
-                    "example": "查询成功"
+                    "example": "ok"
                 }
             }
         },
@@ -1189,13 +1196,22 @@ const docTemplate = `{
         "model.ErrResp": {
             "type": "object",
             "properties": {
-                "err": {
-                    "type": "string",
-                    "example": "Key: 'Title' Error:Field validation for 'Title' failed on the 'required' tag"
+                "code": {
+                    "type": "integer",
+                    "example": 400
                 },
                 "msg": {
                     "type": "string",
                     "example": "参数错误"
+                }
+            }
+        },
+        "model.LoginData": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxx"
                 }
             }
         },
@@ -1219,19 +1235,26 @@ const docTemplate = `{
         "model.LoginResp": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "data": {
+                    "$ref": "#/definitions/model.LoginData"
+                },
                 "msg": {
                     "type": "string",
                     "example": "登录成功"
-                },
-                "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxx"
                 }
             }
         },
         "model.MsgResp": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 0
+                },
                 "msg": {
                     "type": "string",
                     "example": "操作成功"
@@ -1326,12 +1349,16 @@ const docTemplate = `{
         "model.UserResp": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 0
+                },
                 "data": {
                     "$ref": "#/definitions/model.User"
                 },
                 "msg": {
                     "type": "string",
-                    "example": "获取成功"
+                    "example": "ok"
                 }
             }
         }
@@ -1353,7 +1380,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api",
 	Schemes:          []string{"http"},
 	Title:            "起点社区 OutsetHub API",
-	Description:      "起点社区后端接口文档。除注册、登录外,所有接口都需要在请求头携带 Bearer token。\n使用方式:先调用 POST /api/user/login 拿到 token,再点击右上角 Authorize 填入 token 原文(不需要自己加 Bearer 前缀)。\n统一响应约定:成功为 {msg, data} 或 {msg};业务错误为 {msg, err};中间件错误为 {code, msg}。",
+	Description:      "起点社区后端接口文档。除注册、登录外,所有接口都需要在请求头携带 Bearer token。\n使用方式:先调用 POST /api/user/login 拿到 token,再点击右上角 Authorize 填入 token 原文(不需要自己加 Bearer 前缀)。\n统一响应约定:成功为 {code:0, msg:\"ok\", data};仅提示信息的成功为 {code:0, msg};失败为 {code:<http status>, msg},其中 code 与 HTTP 状态码同值。",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

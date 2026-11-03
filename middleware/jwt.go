@@ -1,12 +1,14 @@
 package middleware
 
 import (
+	"backend/response"
 	"backend/utils"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
+
 const (
 	CtxUserID   = "user_id"
 	CtxUsername = "username"
@@ -19,18 +21,18 @@ func JWTAuth() gin.HandlerFunc {
 
 		auth := c.GetHeader("Authorization")
 		if auth == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": "请先登录"})
+			response.Abort(c, http.StatusUnauthorized, "请先登录")
 			return
 		}
 		if !strings.HasPrefix(auth, prefix) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": "Authorization 格式应为 Bearer <token>"})
+			response.Abort(c, http.StatusUnauthorized, "Authorization 格式应为 Bearer <token>")
 			return
 		}
 
 		tokenStr := strings.TrimSpace(strings.TrimPrefix(auth, prefix))
 		claims, err := utils.ParseToken(tokenStr)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": "登录已过期，请重新登录"})
+			response.Abort(c, http.StatusUnauthorized, "登录已过期,请重新登录")
 			return
 		}
 

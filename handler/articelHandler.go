@@ -4,6 +4,7 @@ import (
 	"backend/dao"
 	"backend/middleware"
 	"backend/model"
+	"backend/response"
 	"errors"
 	"net/http"
 	"strconv"
@@ -20,16 +21,16 @@ import (
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Success		200	{object}	model.ArticleListResp
-//	@Failure		401	{object}	model.CodeMsgResp	"未登录或 token 失效"
+//	@Failure		401	{object}	model.ErrResp	"未登录或 token 失效"
 //	@Failure		500	{object}	model.ErrResp
 //	@Router			/article/ [get]
 func GetArticles(c *gin.Context) {
 	articles, err := dao.GetArticles()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "查询失败", Err: err.Error()})
+		response.FailErr(c, http.StatusInternalServerError, "查询失败", err)
 		return
 	}
-	c.JSON(http.StatusOK, model.ArticleListResp{Msg: "查询成功", Data: articles})
+	response.Ok(c, articles)
 }
 
 // GetArticleByID 文章详情
@@ -41,27 +42,27 @@ func GetArticles(c *gin.Context) {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"文章 ID"
 //	@Success		200	{object}	model.ArticleResp
-//	@Failure		400	{object}	model.ErrResp		"无效的文章 ID"
-//	@Failure		401	{object}	model.CodeMsgResp	"未登录或 token 失效"
-//	@Failure		404	{object}	model.ErrResp		"文章不存在"
+//	@Failure		400	{object}	model.ErrResp	"无效的文章 ID"
+//	@Failure		401	{object}	model.ErrResp	"未登录或 token 失效"
+//	@Failure		404	{object}	model.ErrResp	"文章不存在"
 //	@Failure		500	{object}	model.ErrResp
 //	@Router			/article/{id} [get]
 func GetArticleByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "无效的文章 ID"})
+		response.Fail(c, http.StatusBadRequest, "无效的文章 ID")
 		return
 	}
 	article, err := dao.GetArticleByID(id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, model.ErrResp{Msg: "文章不存在"})
+		response.Fail(c, http.StatusNotFound, "文章不存在")
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "查询失败", Err: err.Error()})
+		response.FailErr(c, http.StatusInternalServerError, "查询失败", err)
 		return
 	}
-	c.JSON(http.StatusOK, model.ArticleResp{Msg: "查询成功", Data: article})
+	response.Ok(c, article)
 }
 
 // CreateArticle 发布文章
@@ -74,14 +75,14 @@ func GetArticleByID(c *gin.Context) {
 //	@Security		BearerAuth
 //	@Param			body	body		model.CreateArticleReq	true	"文章内容"
 //	@Success		200		{object}	model.MsgResp
-//	@Failure		400		{object}	model.ErrResp		"缺少 title/content/category_id"
-//	@Failure		401		{object}	model.CodeMsgResp	"未登录或 token 失效"
+//	@Failure		400		{object}	model.ErrResp	"缺少 title/content/category_id"
+//	@Failure		401		{object}	model.ErrResp	"未登录或 token 失效"
 //	@Failure		500		{object}	model.ErrResp
 //	@Router			/article/ [post]
 func CreateArticle(c *gin.Context) {
 	var req model.CreateArticleReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "参数错误,需要 title/content/category_id", Err: err.Error()})
+		response.FailErr(c, http.StatusBadRequest, "参数错误,需要 title/content/category_id", err)
 		return
 	}
 
@@ -97,10 +98,10 @@ func CreateArticle(c *gin.Context) {
 		article.Status = *req.Status
 	}
 	if err := dao.CreateArticle(article); err != nil {
-		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "创建失败", Err: err.Error()})
+		response.FailErr(c, http.StatusInternalServerError, "创建失败", err)
 		return
 	}
-	c.JSON(http.StatusOK, model.MsgResp{Msg: "发布成功"})
+	response.OkMsg(c, "发布成功")
 }
 
 // UpdateArticle 编辑文章
@@ -114,35 +115,35 @@ func CreateArticle(c *gin.Context) {
 //	@Param			id		path		int						true	"文章 ID"
 //	@Param			body	body		model.UpdateArticleReq	true	"待更新字段"
 //	@Success		200		{object}	model.MsgResp
-//	@Failure		400		{object}	model.ErrResp		"参数错误或没有可更新的字段"
-//	@Failure		401		{object}	model.CodeMsgResp	"未登录或 token 失效"
-//	@Failure		403		{object}	model.ErrResp		"只能编辑自己的文章"
-//	@Failure		404		{object}	model.ErrResp		"文章不存在"
+//	@Failure		400		{object}	model.ErrResp	"参数错误或没有可更新的字段"
+//	@Failure		401		{object}	model.ErrResp	"未登录或 token 失效"
+//	@Failure		403		{object}	model.ErrResp	"只能编辑自己的文章"
+//	@Failure		404		{object}	model.ErrResp	"文章不存在"
 //	@Failure		500		{object}	model.ErrResp
 //	@Router			/article/{id} [put]
 func UpdateArticle(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "无效的文章 ID"})
+		response.Fail(c, http.StatusBadRequest, "无效的文章 ID")
 		return
 	}
 	article, err := dao.GetArticleByID(id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, model.ErrResp{Msg: "文章不存在"})
+		response.Fail(c, http.StatusNotFound, "文章不存在")
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "查询失败", Err: err.Error()})
+		response.FailErr(c, http.StatusInternalServerError, "查询失败", err)
 		return
 	}
 	if article.UserID != c.GetInt(middleware.CtxUserID) {
-		c.JSON(http.StatusForbidden, model.ErrResp{Msg: "只能编辑自己的文章"})
+		response.Fail(c, http.StatusForbidden, "只能编辑自己的文章")
 		return
 	}
 
 	var req model.UpdateArticleReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "参数错误", Err: err.Error()})
+		response.FailErr(c, http.StatusBadRequest, "参数错误", err)
 		return
 	}
 	updates := map[string]any{}
@@ -162,14 +163,14 @@ func UpdateArticle(c *gin.Context) {
 		updates["status"] = *req.Status
 	}
 	if len(updates) == 0 {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "没有需要更新的字段"})
+		response.Fail(c, http.StatusBadRequest, "没有需要更新的字段")
 		return
 	}
 	if err := dao.UpdateArticle(id, updates); err != nil {
-		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "更新失败", Err: err.Error()})
+		response.FailErr(c, http.StatusInternalServerError, "更新失败", err)
 		return
 	}
-	c.JSON(http.StatusOK, model.MsgResp{Msg: "修改成功"})
+	response.OkMsg(c, "修改成功")
 }
 
 // DeleteArticle 删除文章
@@ -181,36 +182,36 @@ func UpdateArticle(c *gin.Context) {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"文章 ID"
 //	@Success		200	{object}	model.MsgResp
-//	@Failure		400	{object}	model.ErrResp		"无效的文章 ID"
-//	@Failure		401	{object}	model.CodeMsgResp	"未登录或 token 失效"
-//	@Failure		403	{object}	model.ErrResp		"只能删除自己的文章"
-//	@Failure		404	{object}	model.ErrResp		"文章不存在"
+//	@Failure		400	{object}	model.ErrResp	"无效的文章 ID"
+//	@Failure		401	{object}	model.ErrResp	"未登录或 token 失效"
+//	@Failure		403	{object}	model.ErrResp	"只能删除自己的文章"
+//	@Failure		404	{object}	model.ErrResp	"文章不存在"
 //	@Failure		500	{object}	model.ErrResp
 //	@Router			/article/{id} [delete]
 func DeleteArticle(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "无效的文章 ID"})
+		response.Fail(c, http.StatusBadRequest, "无效的文章 ID")
 		return
 	}
 	article, err := dao.GetArticleByID(id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, model.ErrResp{Msg: "文章不存在"})
+		response.Fail(c, http.StatusNotFound, "文章不存在")
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "查询失败", Err: err.Error()})
+		response.FailErr(c, http.StatusInternalServerError, "查询失败", err)
 		return
 	}
 	if article.UserID != c.GetInt(middleware.CtxUserID) {
-		c.JSON(http.StatusForbidden, model.ErrResp{Msg: "只能删除自己的文章"})
+		response.Fail(c, http.StatusForbidden, "只能删除自己的文章")
 		return
 	}
 	if err := dao.DeleteArticle(id); err != nil {
-		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "删除失败", Err: err.Error()})
+		response.FailErr(c, http.StatusInternalServerError, "删除失败", err)
 		return
 	}
-	c.JSON(http.StatusOK, model.MsgResp{Msg: "删除成功"})
+	response.OkMsg(c, "删除成功")
 }
 
 func RegisterArticleRoutes(rg *gin.RouterGroup) {

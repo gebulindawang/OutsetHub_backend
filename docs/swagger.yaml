@@ -29,20 +29,26 @@ definitions:
     type: object
   model.ArticleListResp:
     properties:
+      code:
+        example: 0
+        type: integer
       data:
         items:
           $ref: '#/definitions/model.Article'
         type: array
       msg:
-        example: 查询成功
+        example: ok
         type: string
     type: object
   model.ArticleResp:
     properties:
+      code:
+        example: 0
+        type: integer
       data:
         $ref: '#/definitions/model.Article'
       msg:
-        example: 查询成功
+        example: ok
         type: string
     type: object
   model.Category:
@@ -60,21 +66,15 @@ definitions:
     type: object
   model.CategoryListResp:
     properties:
+      code:
+        example: 0
+        type: integer
       data:
         items:
           $ref: '#/definitions/model.Category'
         type: array
       msg:
-        example: 查询成功
-        type: string
-    type: object
-  model.CodeMsgResp:
-    properties:
-      code:
-        example: 401
-        type: integer
-      msg:
-        example: 请先登录
+        example: ok
         type: string
     type: object
   model.Comment:
@@ -100,20 +100,26 @@ definitions:
     type: object
   model.CommentListResp:
     properties:
+      code:
+        example: 0
+        type: integer
       data:
         items:
           $ref: '#/definitions/model.Comment'
         type: array
       msg:
-        example: 查询成功
+        example: ok
         type: string
     type: object
   model.CommentResp:
     properties:
+      code:
+        example: 0
+        type: integer
       data:
         $ref: '#/definitions/model.Comment'
       msg:
-        example: 查询成功
+        example: ok
         type: string
     type: object
   model.CreateArticleReq:
@@ -174,12 +180,17 @@ definitions:
     type: object
   model.ErrResp:
     properties:
-      err:
-        example: 'Key: ''Title'' Error:Field validation for ''Title'' failed on the
-          ''required'' tag'
-        type: string
+      code:
+        example: 400
+        type: integer
       msg:
         example: 参数错误
+        type: string
+    type: object
+  model.LoginData:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxx
         type: string
     type: object
   model.LoginReq:
@@ -196,15 +207,20 @@ definitions:
     type: object
   model.LoginResp:
     properties:
+      code:
+        example: 0
+        type: integer
+      data:
+        $ref: '#/definitions/model.LoginData'
       msg:
         example: 登录成功
-        type: string
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxx
         type: string
     type: object
   model.MsgResp:
     properties:
+      code:
+        example: 0
+        type: integer
       msg:
         example: 操作成功
         type: string
@@ -270,10 +286,13 @@ definitions:
     type: object
   model.UserResp:
     properties:
+      code:
+        example: 0
+        type: integer
       data:
         $ref: '#/definitions/model.User'
       msg:
-        example: 获取成功
+        example: ok
         type: string
     type: object
 host: 127.0.0.1:8080
@@ -282,7 +301,7 @@ info:
   description: |-
     起点社区后端接口文档。除注册、登录外,所有接口都需要在请求头携带 Bearer token。
     使用方式:先调用 POST /api/user/login 拿到 token,再点击右上角 Authorize 填入 token 原文(不需要自己加 Bearer 前缀)。
-    统一响应约定:成功为 {msg, data} 或 {msg};业务错误为 {msg, err};中间件错误为 {code, msg}。
+    统一响应约定:成功为 {code:0, msg:"ok", data};仅提示信息的成功为 {code:0, msg};失败为 {code:<http status>, msg},其中 code 与 HTTP 状态码同值。
   title: 起点社区 OutsetHub API
   version: "1.0"
 paths:
@@ -299,7 +318,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "500":
           description: Internal Server Error
           schema:
@@ -334,7 +353,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "500":
           description: Internal Server Error
           schema:
@@ -367,7 +386,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "403":
           description: 只能删除自己的文章
           schema:
@@ -407,7 +426,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "404":
           description: 文章不存在
           schema:
@@ -451,7 +470,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "403":
           description: 只能编辑自己的文章
           schema:
@@ -482,7 +501,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "500":
           description: Internal Server Error
           schema:
@@ -517,11 +536,11 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "403":
           description: 需要管理员权限
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
       security:
       - BearerAuth: []
       summary: 新建板块
@@ -550,11 +569,11 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "403":
           description: 需要管理员权限
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "500":
           description: Internal Server Error
           schema:
@@ -594,11 +613,11 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "403":
           description: 需要管理员权限
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "500":
           description: Internal Server Error
           schema:
@@ -631,7 +650,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "500":
           description: Internal Server Error
           schema:
@@ -666,7 +685,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "500":
           description: Internal Server Error
           schema:
@@ -699,7 +718,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "403":
           description: 只能删除自己的评论
           schema:
@@ -739,7 +758,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "404":
           description: 评论不存在
           schema:
@@ -783,7 +802,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "403":
           description: 只能编辑自己的评论
           schema:
@@ -805,7 +824,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: '校验用户名密码,返回有效期 2 小时的 JWT。后续请求放在 Authorization: Bearer <token>'
+      description: '校验用户名密码,返回有效期 2 小时的 JWT。token 位于 data.token,后续请求放在 Authorization:
+        Bearer <token>'
       parameters:
       - description: 登录参数
         in: body
@@ -840,7 +860,7 @@ paths:
         "401":
           description: 未登录或 token 失效
           schema:
-            $ref: '#/definitions/model.CodeMsgResp'
+            $ref: '#/definitions/model.ErrResp'
         "500":
           description: Internal Server Error
           schema:

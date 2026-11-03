@@ -1,24 +1,23 @@
 package model
 
 // ============================================================
-// 通用响应包装
+// 响应外壳
+//
+// 实际输出由 response 包的 Ok/OkMsg/Fail 统一构造,
+// 这里的结构体只用于 swag 生成文档,字段必须与 response.Body 保持一致。
+// 改动时两边一起改,否则文档与实现会漂移。
 // ============================================================
 
-// MsgResp 只返回提示信息
+// MsgResp 成功,无数据
 type MsgResp struct {
-	Msg string `json:"msg" example:"操作成功"`
+	Code int    `json:"code" example:"0"`
+	Msg  string `json:"msg" example:"操作成功"`
 }
 
-// ErrResp 业务错误,err 为底层错误详情,可能为空
+// ErrResp 失败,业务错误与中间件错误共用此结构
 type ErrResp struct {
-	Msg string `json:"msg" example:"参数错误"`
-	Err string `json:"err,omitempty" example:"Key: 'Title' Error:Field validation for 'Title' failed on the 'required' tag"`
-}
-
-// CodeMsgResp 中间件统一返回的错误(401 未登录 / 403 无权限)
-type CodeMsgResp struct {
-	Code int    `json:"code" example:"401"`
-	Msg  string `json:"msg" example:"请先登录"`
+	Code int    `json:"code" example:"400"`
+	Msg  string `json:"msg" example:"参数错误"`
 }
 
 // ============================================================
@@ -38,15 +37,22 @@ type LoginReq struct {
 	Password string `json:"password" binding:"required" example:"123456"`
 }
 
-// LoginResp 登录成功返回 JWT
-type LoginResp struct {
-	Msg   string `json:"msg" example:"登录成功"`
+// LoginData 登录成功后返回的数据体
+type LoginData struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxx"`
+}
+
+// LoginResp 登录响应
+type LoginResp struct {
+	Code int       `json:"code" example:"0"`
+	Msg  string    `json:"msg" example:"登录成功"`
+	Data LoginData `json:"data"`
 }
 
 // UserResp 当前用户信息
 type UserResp struct {
-	Msg  string `json:"msg" example:"获取成功"`
+	Code int    `json:"code" example:"0"`
+	Msg  string `json:"msg" example:"ok"`
 	Data User   `json:"data"`
 }
 
@@ -74,13 +80,15 @@ type UpdateArticleReq struct {
 
 // ArticleListResp 文章列表(仅已发布,按创建时间倒序,固定 10 条)
 type ArticleListResp struct {
-	Msg  string    `json:"msg" example:"查询成功"`
+	Code int       `json:"code" example:"0"`
+	Msg  string    `json:"msg" example:"ok"`
 	Data []Article `json:"data"`
 }
 
 // ArticleResp 文章详情
 type ArticleResp struct {
-	Msg  string  `json:"msg" example:"查询成功"`
+	Code int     `json:"code" example:"0"`
+	Msg  string  `json:"msg" example:"ok"`
 	Data Article `json:"data"`
 }
 
@@ -102,7 +110,8 @@ type UpdateCategoryReq struct {
 
 // CategoryListResp 板块列表(按 sort 升序)
 type CategoryListResp struct {
-	Msg  string     `json:"msg" example:"查询成功"`
+	Code int        `json:"code" example:"0"`
+	Msg  string     `json:"msg" example:"ok"`
 	Data []Category `json:"data"`
 }
 
@@ -125,12 +134,14 @@ type UpdateCommentReq struct {
 
 // CommentListResp 指定文章下的评论列表(按创建时间升序)
 type CommentListResp struct {
-	Msg  string    `json:"msg" example:"查询成功"`
+	Code int       `json:"code" example:"0"`
+	Msg  string    `json:"msg" example:"ok"`
 	Data []Comment `json:"data"`
 }
 
 // CommentResp 评论详情
 type CommentResp struct {
-	Msg  string  `json:"msg" example:"查询成功"`
+	Code int     `json:"code" example:"0"`
+	Msg  string  `json:"msg" example:"ok"`
 	Data Comment `json:"data"`
 }

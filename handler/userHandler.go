@@ -4,6 +4,7 @@ import (
 	"backend/dao"
 	"backend/middleware"
 	"backend/model"
+	"backend/response"
 	"backend/utils"
 	"net/http"
 
@@ -25,12 +26,12 @@ import (
 func Register(c *gin.Context) {
 	var req model.RegisterReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "注册失败", Err: err.Error()})
+		response.FailErr(c, http.StatusBadRequest, "参数校验失败", err)
 		return
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "注册失败", Err: err.Error()})
+		response.FailErr(c, http.StatusBadRequest, "注册失败", err)
 		return
 	}
 	user := model.User{
@@ -39,16 +40,16 @@ func Register(c *gin.Context) {
 		Nickname: req.Nickname,
 	}
 	if err := dao.Register(&user); err != nil {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "注册失败,用户名可能已存在", Err: err.Error()})
+		response.FailErr(c, http.StatusBadRequest, "注册失败,用户名可能已存在", err)
 		return
 	}
-	c.JSON(http.StatusOK, model.MsgResp{Msg: "注册成功"})
+	response.OkMsg(c, "注册成功")
 }
 
 // Login 登录并签发 JWT
 //
 //	@Summary		用户登录
-//	@Description	校验用户名密码,返回有效期 2 小时的 JWT。后续请求放在 Authorization: Bearer <token>
+//	@Description	校验用户名密码,返回有效期 2 小时的 JWT。token 位于 data.token,后续请求放在 Authorization: Bearer <token>
 //	@Tags			user
 //	@Accept			json
 //	@Produce		json
@@ -59,24 +60,24 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	var req model.LoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "数据解析失败", Err: err.Error()})
+		response.FailErr(c, http.StatusBadRequest, "数据解析失败", err)
 		return
 	}
 	u, err := dao.FindUserByusername(req.Username)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "用户名或密码错误"})
+		response.Fail(c, http.StatusBadRequest, "用户名或密码错误")
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(req.Password)); err != nil {
-		c.JSON(http.StatusBadRequest, model.ErrResp{Msg: "用户名或密码错误"})
+		response.Fail(c, http.StatusBadRequest, "用户名或密码错误")
 		return
 	}
 	token, err := utils.GenToken(u.ID, u.Username, u.Role)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "签发 token 失败", Err: err.Error()})
+		response.FailErr(c, http.StatusInternalServerError, "签发 token 失败", err)
 		return
 	}
-	c.JSON(http.StatusOK, model.LoginResp{Msg: "登录成功", Token: token})
+	response.Ok(c, model.LoginData{Token: token})
 }
 
 // UserInfo 获取当前登录用户
@@ -87,17 +88,17 @@ func Login(c *gin.Context) {
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Success		200	{object}	model.UserResp
-//	@Failure		401	{object}	model.CodeMsgResp	"未登录或 token 失效"
+//	@Failure		401	{object}	model.ErrResp	"未登录或 token 失效"
 //	@Failure		500	{object}	model.ErrResp
 //	@Router			/user/me [get]
 func UserInfo(c *gin.Context) {
 	username := c.GetString(middleware.CtxUsername)
 	u, err := dao.FindUserByusername(username)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, model.ErrResp{Msg: "查询失败", Err: err.Error()})
+		response.FailErr(c, http.StatusInternalServerError, "查询失败", err)
 		return
 	}
-	c.JSON(http.StatusOK, model.UserResp{Msg: "获取成功", Data: u})
+	response.Ok(c, u)
 }
 
 func RegisterUserRoutes(rg *gin.RouterGroup) {
